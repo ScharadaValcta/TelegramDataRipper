@@ -1,0 +1,7 @@
+{
+  "api_id": "DEINE_API_ID",
+  "api_hash": "DEIN_API_HASH",
+  "phone_number": "DEINE_TELEFONNUMMER",
+  "save_directory": "DEIN_VERZEICHNIS",
+  "excluded_usernames": ["BENUTZERNAME1", "BENUTZERNAME2"]
+}
