@@ -2,3 +2,4 @@
 *.session-journal
 config.json
 *.txt
+20*
