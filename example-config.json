@@ -3,5 +3,8 @@
   "api_hash": "DEIN_API_HASH",
   "phone_number": "DEINE_TELEFONNUMMER",
   "save_directory": "DEIN_VERZEICHNIS",
-  "excluded_usernames": ["BENUTZERNAME1", "BENUTZERNAME2"]
+  "archive_file": "archive.txt",
+  "excluded_usernames": ["BENUTZERNAME1", "BENUTZERNAME2"],
+  "excluded_chats": ["CHATNAME1", "CHATNAME2"],
+  "excluded_filename": ["FILENAME1","FILENAME2"]
 }
