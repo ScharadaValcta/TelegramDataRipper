@@ -56,6 +56,8 @@ PHONE_NUMBER = config.get("phone_number")
 SAVE_DIRECTORY = config.get("save_directory")
 ARCHIVE_FILE = config.get("archive_file")
 excluded_usernames = config.get("excluded_usernames", [])
+excluded_chats = config.get("excluded_chats", [])
+excluded_filename = config.get("excluded_filename",[])
 
 # Funktion zum Herunterladen der Dateien
 async def download_media(message, chat, chat_title,excluded_usernames):
@@ -66,6 +68,14 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     # Überprüfen, ob der Benutzername in der Ausschlussliste enthalten ist
     if user.username in excluded_usernames:
         print(f"Datei von Benutzer wird nicht heruntergeladen: '{user.username}'")
+        return
+    
+    if chat_title in excluded_chats:
+        print(f"Datei aus Chat wird nicht heruntergeladen: '{chat_title}'")
+        return
+
+    if is_file_in_archive(chat_id, user.id,message.id):
+        print("Datei bereits in Archivfile")
         return
 
     # Erstellen des Verzeichnispfads basierend auf Jahr/Monat/Chat-Titel/Chat-ID/Benutzer-ID/Benutzername
@@ -80,9 +90,6 @@ async def download_media(message, chat, chat_title,excluded_usernames):
         user.username if user.username else str(user.id)
     )
 
-    # Überprüfen, ob das Verzeichnis vorhanden ist, andernfalls erstellen
-    os.makedirs(directory, exist_ok=True)
-
     # Herunterladen der Medien und Dateien
     if message.document:
         # Überprüfen, ob das Dokument ein Bild ist
@@ -90,6 +97,11 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             file_name = next((x.file_name for x in message.document.attributes if isinstance(x, DocumentAttributeFilename)), None)
             if not file_name:
                 file_name = f"image.jpg"
+            if file_name in excluded_filename:
+                print(f"Datei wird wegen exluded_filename nicht heruntergeladen: '{file_name}'")
+                return
+            # Überprüfen, ob das Verzeichnis vorhanden ist, andernfalls erstellen
+            os.makedirs(directory, exist_ok=True)
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
