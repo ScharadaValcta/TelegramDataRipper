@@ -82,7 +82,7 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     directory = os.path.join(
         SAVE_DIRECTORY,
         str(date.year),
-        str(date.month),
+        f"{date.month:02d}",
         "TelegramMediaRipper",
         str(chat_title),
         str(chat_id),
