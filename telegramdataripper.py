@@ -28,6 +28,19 @@ def save_config(config):
     with open(CONFIG_FILE, "w") as file:
         json.dump(config, file, indent=4)
 
+# Funktion zum Hinzufügen des Strings zum Archiv
+def add_to_archive(chat_id, user_id, message_id):
+    file_path = f"{chat_id}_{user_id}_{message_id}"
+    with open(ARCHIVE_FILE, "a") as archive:
+        archive.write(file_path + "\n")
+
+# Funktion zum Prüfen, ob eine Datei im Archiv vorhanden ist
+def is_file_in_archive(chat_id, user_id, message_id):
+    file_path = f"{chat_id}_{user_id}_{message_id}"
+    with open(ARCHIVE_FILE, "r") as archive:
+        file_list = archive.read().splitlines()
+        return file_path in file_list
+
 # Laden der Konfigurationsdaten
 config = load_config()
 
@@ -39,6 +52,7 @@ API_ID = config.get("api_id")
 API_HASH = config.get("api_hash")
 PHONE_NUMBER = config.get("phone_number")
 SAVE_DIRECTORY = config.get("save_directory")
+ARCHIVE_FILE = config.get("archive_file")
 excluded_usernames = config.get("excluded_usernames", [])
 
 # Funktion zum Herunterladen der Dateien
