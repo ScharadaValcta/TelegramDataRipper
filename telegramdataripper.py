@@ -8,6 +8,8 @@ from telethon.tl import types
 
 import json
 
+import asyncio
+
 CONFIG_FILE = "config.json"
 
 # Funktion zum Laden der Konfigurationsdaten aus der JSON-Datei
@@ -56,7 +58,7 @@ ARCHIVE_FILE = config.get("archive_file")
 excluded_usernames = config.get("excluded_usernames", [])
 
 # Funktion zum Herunterladen der Dateien
-def download_media(message, chat, chat_title,excluded_usernames):
+async def download_media(message, chat, chat_title,excluded_usernames):
     date = message.date
     chat_id = message.chat_id
     user = message.sender
@@ -90,11 +92,27 @@ def download_media(message, chat, chat_title,excluded_usernames):
                 file_name = f"image.jpg"
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
-                client.download_media(message, file=file_path)
+                await client.download_media(message, file=file_path)
                 print(f"Die Datei wird heruntergeladen: {file_path}")
+                add_to_archive(chat_id, user.id, message.id)
             else:
                 print(f"Die Datei existiert bereits und wird nicht erneut heruntergeladen: {file_path}")
 
+# Definition einer asynchronen Funktion
+async def process_messages():
+    #Alle vergangenen Nachrichten abrufen und herunterladen
+    async for dialog in client.iter_dialogs():
+        chat = dialog.entity
+        chat_title = chat.title if hasattr(chat, 'title') else chat.username
+        messages = client.iter_messages(chat)
+        async for message in messages:
+            if message.document:
+                image_size = next((x for x in message.document.attributes if isinstance(x, DocumentAttributeImageSize)), None)
+                await download_media(message, chat, chat_title, excluded_usernames)
+
+# Erstellen der Archivdatei, wenn sie nicht existiert
+if not os.path.exists(ARCHIVE_FILE):
+    open(ARCHIVE_FILE, "w").close()
 
 # Telegram-Client-Initialisierung und Authentifizierung
 client = TelegramClient('MediaRipper', API_ID, API_HASH)
@@ -114,17 +132,12 @@ async def handle_message(event):
             chat_title = chat.username or "Direct Messages"
         else:
             chat_title = chat.title
-        download_media(event.message, chat, chat_title,excluded_usernames)
+            await download_media(event.message, chat, chat_title,excluded_usernames)
 
-# Alle vergangenen Nachrichten abrufen und herunterladen
-for dialog in client.iter_dialogs():
-    chat = dialog.entity
-    chat_title = chat.title if hasattr(chat, 'title') else chat.username
-    messages = client.iter_messages(chat)
-    for message in messages:
-        if message.document:
-            #image_size = next((x for x in message.document.attributes if isinstance(x, DocumentAttributeImageSize)), None)
-            download_media(message, chat, chat_title,excluded_usernames)
+# Erhalte den bereits vorhandenen Event-Loop
+loop = asyncio.get_event_loop()
+# Führe den asynchronen Task im vorhandenen Event-Loop aus
+loop.run_until_complete(process_messages())
 
 # Starte den Telegram-Client
 client.run_until_disconnected()
