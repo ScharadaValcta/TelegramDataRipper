@@ -10,6 +10,8 @@ import json
 
 import asyncio
 
+import datetime
+
 CONFIG_FILE = "config.json"
 
 # Funktion zum Laden der Konfigurationsdaten aus der JSON-Datei
@@ -43,6 +45,11 @@ def is_file_in_archive(chat_id, user_id, message_id):
         file_list = archive.read().splitlines()
         return file_path in file_list
 
+def aktuelles_datum():
+    jetzt = datetime.datetime.now()
+    datum_formatiert = jetzt.strftime("[%Y-%m-%d-%H-%M-%S]")
+    return datum_formatiert
+
 # Laden der Konfigurationsdaten
 config = load_config()
 
@@ -67,15 +74,15 @@ async def download_media(message, chat, chat_title,excluded_usernames):
 
     # Überprüfen, ob der Benutzername in der Ausschlussliste enthalten ist
     if user.username in excluded_usernames:
-        print(f"Datei von Benutzer wird nicht heruntergeladen: '{user.username}'")
+        print(f"{aktuelles_datum()} Datei von Benutzer wird nicht heruntergeladen: {chat_title} '{user.username}'")
         return
     
     if chat_title in excluded_chats:
-        print(f"Datei aus Chat wird nicht heruntergeladen: '{chat_title}'")
+        print(f"{aktuelles_datum()} Datei aus Chat wird nicht heruntergeladen: '{chat_title}'")
         return
 
     if is_file_in_archive(chat_id, user.id,message.id):
-        print("Datei bereits in Archivfile")
+        print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title} ")
         return
 
     # Erstellen des Verzeichnispfads basierend auf Jahr/Monat/Chat-Titel/Chat-ID/Benutzer-ID/Benutzername
@@ -98,17 +105,17 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             if not file_name:
                 file_name = f"image.jpg"
             if file_name in excluded_filename:
-                print(f"Datei wird wegen exluded_filename nicht heruntergeladen: '{file_name}'")
+                print(f"{aktuelles_datum()} Datei wird wegen exluded_filename nicht heruntergeladen: {chat_title} '{file_name}'")
                 return
             # Überprüfen, ob das Verzeichnis vorhanden ist, andernfalls erstellen
             os.makedirs(directory, exist_ok=True)
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
-                print(f"Die Datei wird heruntergeladen: {file_path}")
+                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_path}")
                 add_to_archive(chat_id, user.id, message.id)
             else:
-                print(f"Die Datei existiert bereits und wird nicht erneut heruntergeladen: {file_path}")
+                print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen:  {chat_title} {file_path}")
 
 # Definition einer asynchronen Funktion
 async def process_messages():
