@@ -127,6 +127,10 @@ async def process_messages():
         async for message in messages:
             if message.document:
                 image_size = next((x for x in message.document.attributes if isinstance(x, DocumentAttributeImageSize)), None)
+                if len(asyncio.all_tasks()) >= 500:
+                    print("Mehr als 500 Task laufen")
+                    await asyncio.sleep(1800)
+                    await asyncio.gather(*tasks)
                 await download_media(message, chat, chat_title, excluded_usernames)
 
 # Erstellen der Archivdatei, wenn sie nicht existiert
