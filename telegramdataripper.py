@@ -3,7 +3,7 @@
 import os
 import datetime
 from telethon.sync import TelegramClient, events
-from telethon.tl.types import DocumentAttributeFilename, DocumentAttributeImageSize
+from telethon.tl.types import DocumentAttributeFilename, DocumentAttributeImageSize, MessageMediaPhoto, PhotoSize, PeerUser
 from telethon.tl import types
 
 import json
@@ -73,10 +73,14 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     user = message.sender
 
     # Überprüfen, ob der Benutzername in der Ausschlussliste enthalten ist
-    if user.username in excluded_usernames:
-        print(f"{aktuelles_datum()} Datei von Benutzer wird nicht heruntergeladen: {chat_title} '{user.username}'")
-        return
-    
+    if isinstance(message.sender_id, PeerUser):
+        user = await client.get_entity(message.sender_id.user_id)
+        if user.username is not None and user.username in excluded_usernames:
+            print(f"{aktuelles_datum()} Datei wird wegen excluded_usernames nicht heruntergeladen: {chat_title} von '{user.username}'")
+            return
+    else:
+        user = message.sender
+
     if chat_title in excluded_chats:
         print(f"{aktuelles_datum()} Datei aus Chat wird nicht heruntergeladen: '{chat_title}'")
         return
@@ -103,7 +107,8 @@ async def download_media(message, chat, chat_title,excluded_usernames):
         if any(isinstance(x, DocumentAttributeImageSize) for x in message.document.attributes):
             file_name = next((x.file_name for x in message.document.attributes if isinstance(x, DocumentAttributeFilename)), None)
             if not file_name:
-                file_name = f"image.jpg"
+                #file_name = f"image.jpg"
+                file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
             if file_name in excluded_filename:
                 print(f"{aktuelles_datum()} Datei wird wegen exluded_filename nicht heruntergeladen: {chat_title} '{file_name}'")
                 return
@@ -112,10 +117,36 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
-                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_path}")
+                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_name}")
                 add_to_archive(chat_id, user.id, message.id)
+                #print("document",chat_id, user.id, message.id)
             else:
-                print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen:  {chat_title} {file_path}")
+                print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen: {chat_title} {file_name}")
+    elif isinstance(message.media, MessageMediaPhoto):
+        # Überprüfen, ob das Medienelement ein Bild ist
+        sizes = message.media.photo.sizes
+        if any(isinstance(x, PhotoSize) for x in sizes):
+            #file_reference = next((x for x in sizes if isinstance(x, PhotoSize)), None)
+            #if file_reference is not None:
+            #    #file_name = f"IMG_{file_reference.type}.jpg"
+            #else:
+            #    file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
+
+            file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
+
+            if file_name in excluded_filename:
+                print(f"{aktuelles_datum()} Datei wird wegen excluded_filename nicht heruntergeladen: {chat_title} '{file_name}'")
+                return
+            # Überprüfen, ob das Verzeichnis vorhanden ist, andernfalls erstellen
+            os.makedirs(directory, exist_ok=True)
+            file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
+            if not os.path.exists(file_path):
+                await client.download_media(message, file=file_path)
+                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_name}")
+                add_to_archive(chat_id, user.id, message.id)
+                print("media",chat_id, user.id, message.id)
+            else:
+                print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen:  {chat_title} {file_name}")
 
 # Definition einer asynchronen Funktion
 async def process_messages():
@@ -127,11 +158,11 @@ async def process_messages():
         async for message in messages:
             if message.document:
                 image_size = next((x for x in message.document.attributes if isinstance(x, DocumentAttributeImageSize)), None)
-                if len(asyncio.all_tasks()) >= 500:
-                    print("Mehr als 500 Task laufen")
-                    await asyncio.sleep(1800)
-                    await asyncio.gather(*tasks)
                 await download_media(message, chat, chat_title, excluded_usernames)
+            elif isinstance(message.media, MessageMediaPhoto):
+                image_size = next((x for x in message.media.photo.sizes if isinstance(x, PhotoSize)), None)
+                await download_media(message, chat, chat_title, excluded_usernames)
+
 
 # Erstellen der Archivdatei, wenn sie nicht existiert
 if not os.path.exists(ARCHIVE_FILE):
@@ -150,11 +181,12 @@ if not client.is_user_authorized():
 @client.on(events.NewMessage)
 async def handle_message(event):
     chat = await event.get_chat()
-    if event.media:
+    if event.media or event.document:
         if isinstance(chat, types.User):
             chat_title = chat.username or "Direct Messages"
         else:
             chat_title = chat.title
+        if chat_title:
             await download_media(event.message, chat, chat_title,excluded_usernames)
 
 # Erhalte den bereits vorhandenen Event-Loop
