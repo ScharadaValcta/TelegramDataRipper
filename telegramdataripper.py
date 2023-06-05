@@ -85,9 +85,25 @@ async def download_media(message, chat, chat_title,excluded_usernames):
         print(f"{aktuelles_datum()} Datei aus Chat wird nicht heruntergeladen: '{chat_title}'")
         return
 
-    if is_file_in_archive(chat_id, user.id,message.id):
+    if user is None and is_file_in_archive(chat_id, message.id, message.id):
         print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title} ")
         return
+    elif is_file_in_archive(chat_id, user.id, message.id):
+        print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title} ")
+        return
+
+    if user:
+        user_id = str(user.id)
+    else:
+        user_id = "Deleted User"
+    if user and user.username:
+        user_username = user.username
+    elif user and user.first_name != None and user.last_name != None:
+        user_username = str(user.first_name) + " " + str(user.last_name) 
+    elif user and user.first_name != None:
+        user_username = user.first_name
+    else:
+        user_username = "Deleted User"
 
     # Erstellen des Verzeichnispfads basierend auf Jahr/Monat/Chat-Titel/Chat-ID/Benutzer-ID/Benutzername
     directory = os.path.join(
@@ -97,10 +113,10 @@ async def download_media(message, chat, chat_title,excluded_usernames):
         "TelegramMediaRipper",
         str(chat_title),
         str(chat_id),
-        str(user.id),
-        user.username if user.username else str(user.id)
+        user_id,
+        user_username
     )
-
+ 
     # Herunterladen der Medien und Dateien
     if message.document:
         # Überprüfen, ob das Dokument ein Bild ist
@@ -118,20 +134,16 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
                 print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_name}")
-                add_to_archive(chat_id, user.id, message.id)
-                #print("document",chat_id, user.id, message.id)
+                if user is None:
+                    add_to_archive(chat_id, message.id, message.id)
+                else:
+                    add_to_archive(chat_id, user.id, message.id)
             else:
                 print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen: {chat_title} {file_name}")
     elif isinstance(message.media, MessageMediaPhoto):
         # Überprüfen, ob das Medienelement ein Bild ist
         sizes = message.media.photo.sizes
         if any(isinstance(x, PhotoSize) for x in sizes):
-            #file_reference = next((x for x in sizes if isinstance(x, PhotoSize)), None)
-            #if file_reference is not None:
-            #    #file_name = f"IMG_{file_reference.type}.jpg"
-            #else:
-            #    file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
-
             file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
 
             if file_name in excluded_filename:
@@ -143,8 +155,10 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
                 print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_name}")
-                add_to_archive(chat_id, user.id, message.id)
-                print("media",chat_id, user.id, message.id)
+                if user is None:
+                    add_to_archive(chat_id, message.id, message.id)
+                else:
+                    add_to_archive(chat_id, user.id, message.id)
             else:
                 print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen:  {chat_title} {file_name}")
 
