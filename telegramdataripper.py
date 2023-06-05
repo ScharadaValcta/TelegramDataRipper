@@ -120,8 +120,10 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     # Herunterladen der Medien und Dateien
     if message.document:
         # Überprüfen, ob das Dokument ein Bild ist
-        if any(isinstance(x, DocumentAttributeImageSize) for x in message.document.attributes):
-            file_name = next((x.file_name for x in message.document.attributes if isinstance(x, DocumentAttributeFilename)), None)
+        attributes = message.document.attributes
+        #print(f"Attributes: {attributes}")
+        if any(isinstance(x, DocumentAttributeImageSize) for x in attributes):
+            file_name = next((x.file_name for x in attributes if isinstance(x, DocumentAttributeFilename)), None)
             if not file_name:
                 #file_name = f"image.jpg"
                 file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
@@ -143,6 +145,7 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     elif isinstance(message.media, MessageMediaPhoto):
         # Überprüfen, ob das Medienelement ein Bild ist
         sizes = message.media.photo.sizes
+        #print(f"Sizes: {sizes}")
         if any(isinstance(x, PhotoSize) for x in sizes):
             file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
 
