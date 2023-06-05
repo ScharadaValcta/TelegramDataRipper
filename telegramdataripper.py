@@ -107,11 +107,11 @@ async def download_media(message, chat, chat_title,excluded_usernames):
 
     # Erstellen des Verzeichnispfads basierend auf Jahr/Monat/Chat-Titel/Chat-ID/Benutzer-ID/Benutzername
     directory = os.path.join(
-        SAVE_DIRECTORY,
+        SAVE_DIRECTORY, 
+        "TelegramMediaRipper", 
+        str(chat_title),
         str(date.year),
         f"{date.month:02d}",
-        "TelegramMediaRipper",
-        str(chat_title),
         str(chat_id),
         user_id,
         user_username
