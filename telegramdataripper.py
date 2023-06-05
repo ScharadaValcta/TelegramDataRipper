@@ -12,6 +12,8 @@ import asyncio
 
 import datetime
 
+import random
+
 CONFIG_FILE = "config.json"
 
 # Funktion zum Laden der Konfigurationsdaten aus der JSON-Datei
@@ -112,8 +114,8 @@ async def download_media(message, chat, chat_title,excluded_usernames):
         str(chat_title),
         str(date.year),
         f"{date.month:02d}",
-        str(chat_id),
-        user_id,
+        #str(chat_id),
+        #user_id,
         user_username
     )
  
@@ -125,8 +127,9 @@ async def download_media(message, chat, chat_title,excluded_usernames):
         if any(isinstance(x, DocumentAttributeImageSize) for x in attributes):
             file_name = next((x.file_name for x in attributes if isinstance(x, DocumentAttributeFilename)), None)
             if not file_name:
+                zahl = random.randint(100, 999)
                 #file_name = f"image.jpg"
-                file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
+                file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}_{zahl}.jpg"
             if file_name in excluded_filename:
                 print(f"{aktuelles_datum()} Datei wird wegen exluded_filename nicht heruntergeladen: {chat_title} {file_name}")
                 return
@@ -134,7 +137,7 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             os.makedirs(directory, exist_ok=True)
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
-                await client.download_media(message, file=file_path)
+                await client.download_media(message, file=file_path, thumb=None)
                 print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title} {file_name}")
                 if user is None:
                     add_to_archive(chat_id, message.id, message.id)
@@ -145,9 +148,20 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     elif isinstance(message.media, MessageMediaPhoto):
         # Überprüfen, ob das Medienelement ein Bild ist
         sizes = message.media.photo.sizes
+        #for photo in sizes:
+        #    file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}_{photo.file_size}_{photo.type}.jpg"
+        #    os.makedirs(directory, exist_ok=True)
+        #    file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
+        #    if not os.path.exists(file_path):
+        #        await client.download_media(photo, file=file_path, thumb=None)
+        #        print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title} {file_name}")
+        #    else:
+        #        print(f"{aktuelles_datum()} Die Datei existiert bereits und wird nicht erneut heruntergeladen:  {chat_title} {file_name}")
+
         #print(f"Sizes: {sizes}")
         if any(isinstance(x, PhotoSize) for x in sizes):
-            file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
+            zahl = random.randint(100, 999)
+            file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}_{zahl}.jpg"
 
             if file_name in excluded_filename:
                 print(f"{aktuelles_datum()} Datei wird wegen excluded_filename nicht heruntergeladen: {chat_title} {file_name}")
@@ -156,7 +170,7 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             os.makedirs(directory, exist_ok=True)
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
-                await client.download_media(message, file=file_path)
+                await client.download_media(message, file=file_path, thumb=None)
                 print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title} {file_name}")
                 if user is None:
                     add_to_archive(chat_id, message.id, message.id)
