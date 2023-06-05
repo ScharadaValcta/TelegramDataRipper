@@ -76,20 +76,20 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     if isinstance(message.sender_id, PeerUser):
         user = await client.get_entity(message.sender_id.user_id)
         if user.username is not None and user.username in excluded_usernames:
-            print(f"{aktuelles_datum()} Datei wird wegen excluded_usernames nicht heruntergeladen: {chat_title} von '{user.username}'")
+            print(f"{aktuelles_datum()} Datei wird wegen excluded_usernames nicht heruntergeladen: {chat_title} von {user.username}")
             return
     else:
         user = message.sender
 
     if chat_title in excluded_chats:
-        print(f"{aktuelles_datum()} Datei aus Chat wird nicht heruntergeladen: '{chat_title}'")
+        print(f"{aktuelles_datum()} Datei aus Chat wird nicht heruntergeladen: {chat_title}")
         return
 
     if user is None and is_file_in_archive(chat_id, message.id, message.id):
-        print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title} ")
+        print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title}")
         return
     elif is_file_in_archive(chat_id, user.id, message.id):
-        print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title} ")
+        print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title}")
         return
 
     if user:
@@ -128,14 +128,14 @@ async def download_media(message, chat, chat_title,excluded_usernames):
                 #file_name = f"image.jpg"
                 file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
             if file_name in excluded_filename:
-                print(f"{aktuelles_datum()} Datei wird wegen exluded_filename nicht heruntergeladen: {chat_title} '{file_name}'")
+                print(f"{aktuelles_datum()} Datei wird wegen exluded_filename nicht heruntergeladen: {chat_title} {file_name}")
                 return
             # Überprüfen, ob das Verzeichnis vorhanden ist, andernfalls erstellen
             os.makedirs(directory, exist_ok=True)
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
-                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_name}")
+                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title} {file_name}")
                 if user is None:
                     add_to_archive(chat_id, message.id, message.id)
                 else:
@@ -150,14 +150,14 @@ async def download_media(message, chat, chat_title,excluded_usernames):
             file_name = f"IMG_{date.strftime('%Y%m%d_%H%M%S_%f')[:-3]}.jpg"
 
             if file_name in excluded_filename:
-                print(f"{aktuelles_datum()} Datei wird wegen excluded_filename nicht heruntergeladen: {chat_title} '{file_name}'")
+                print(f"{aktuelles_datum()} Datei wird wegen excluded_filename nicht heruntergeladen: {chat_title} {file_name}")
                 return
             # Überprüfen, ob das Verzeichnis vorhanden ist, andernfalls erstellen
             os.makedirs(directory, exist_ok=True)
             file_path = os.path.join(directory, f"{date.strftime('%Y%m%d%H%M%S')}_{file_name}")
             if not os.path.exists(file_path):
                 await client.download_media(message, file=file_path)
-                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title}  {file_name}")
+                print(f"{aktuelles_datum()} Die Datei wird heruntergeladen: {chat_title} {file_name}")
                 if user is None:
                     add_to_archive(chat_id, message.id, message.id)
                 else:
