@@ -90,6 +90,8 @@ async def download_media(message, chat, chat_title,excluded_usernames):
     if user is None and is_file_in_archive(chat_id, message.id, message.id):
         print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title}")
         return
+    elif user is None:
+        pass
     elif is_file_in_archive(chat_id, user.id, message.id):
         print(f"{aktuelles_datum()} Datei bereits in Archivfile {chat_title}")
         return
